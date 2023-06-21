@@ -1,61 +1,74 @@
 def branch = "main"
-def remote = "origin"
+def repo = "https://github.com/angellaviory/dumbmerchfe"
+def cred = "ubuntu"
 def dir = "~/dumbmerchfe"
 def server = "192.168.64.49"
-def credi = "ubuntu"
+def imagename = "dumbmerchfe"
 
 pipeline {
-	agent any
-	stages {
-		stage ('Pull From Git'){
-			steps{
-				sshagent ([credi]) {
-					sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
-					cd ${dir}
-					git pull ${remote} ${branch}
-					exit
-					EOF"""
-				}
-			}
-		}
-	
-
-                stage ('docker build'){
-                        steps{
-                                sshagent ([credi]) {
-                                        sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
-                                        cd ${dir}
-                                        docker build -t dumbmerch-fee .
-                                        exit
-                                        EOF"""
-                                }
-                        }
+    agent any
+    stages {
+        stage('Repository pull') {
+            steps {
+                sshagent([cred]) {
+                    sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
+		    mkdir ${dir}
+                    cd ${dir}
+		    git init
+                    git remote add origin ${repo}
+		    git pull origin master
+		    git branch ${branch}
+		    git checkout ${branch}
+		    git pull origin ${branch}
+                    exit
+                    EOF
+                    """
                 }
-        
+            }
+        }
+    
+        stage('Image Build') {
+            steps {
+                sshagent([cred]) {
+                    sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
+                    mkdir ${dir}
+                    cd ${dir}
+                    docker build -t ${imagename}:latest .
+                    exit
+                    EOF
+                    """
+                    }
+               }
+         }
 
-                stage ('docker run'){
-                        steps{
-                                sshagent ([credi]) {
-                                        sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
-                                        cd ${dir}
-                                        docker run -d -p 3000:3000 dumbmerch-fee
-                                        exit
-                                        EOF"""
-                                }
-                        }
-                }
-        
-                stage ('docker push'){
-                        steps{
-                                sshagent ([credi]) {
-                                        sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
-                                        cd ${dir}
-					docker tag dumbmerch-fee:latest angellaviory/dumbmerch-fee:latest
-                                        docker push angellaviory/dumbmerch-fee:latest
-                                        exit
-                                        EOF"""
-                                }
-                        }
-                }	
-	}
+         stage('Image Push') {
+            steps {
+                sshagent([cred]) {
+                    sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
+                    mkdir ${dir}
+                    cd ${dir}
+                    docker tag ${imagename}:latest angellaviory/dumbmerchfee:latest
+                    docker push angellaviory/dumbmerchfee:latest
+                    exit
+                    EOF
+                    """
+                    }
+               }
+         }
+
+         stage('Docker Run') {
+            steps {
+                sshagent([cred]) {
+                    sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
+                    mkdir ${dir}
+                    cd ${dir}
+                    docker run -d -p 3300:3000 ${imagename}:latest
+                    exit
+                    EOF
+                    """
+                    }
+               }
+         }
+
+    }
 }
