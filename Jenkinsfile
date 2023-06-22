@@ -13,7 +13,7 @@ pipeline {
 				sshagent ([credi]) {
 					sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
 					cd ${dir}
-					git pull ${branch}
+					git pull origin ${branch}
 					exit
 					EOF"""
 				}
