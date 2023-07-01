@@ -9,17 +9,23 @@ pipeline {
 	agent any
 	stages {
 		stage ('Pull From Git'){
-			steps{
-				sshagent ([credi]) {
-					sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
-#					cd ${dir}
-#					git pull origin ${branch}
-#					exit
-					touch Jenkinsfile2
-					EOF"""
-				}
-			}
-		}
+		  steps{
+		    sshagent ([cred]) {
+                    sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
+		    mkdir ${dir}
+                    cd ${dir}
+		    git init
+                    git remote add origin ${repo}
+		    git pull origin master
+		    git branch ${branch}
+		    git checkout ${branch}
+		    git pull origin ${branch}
+                    exit
+                    EOF
+                    """
+	            }
+          	}
+ 	 }
 	
     
         stage('Image Build') {
