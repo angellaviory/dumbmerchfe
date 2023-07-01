@@ -12,9 +12,10 @@ pipeline {
 			steps{
 				sshagent ([credi]) {
 					sh """ssh -o StrictHostKeyChecking=no ${server} << EOF
-					cd ${dir}
-					git pull origin ${branch}
-					exit
+#					cd ${dir}
+#					git pull origin ${branch}
+#					exit
+					touch Jenkinsfile2
 					EOF"""
 				}
 			}
